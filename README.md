@@ -36,6 +36,36 @@ streamlit run src/app.py
 ```
 5. Access the app in your web browser by following the URL displayed in your terminal.
 
+# Deploying Docker Image to DockerHub
+
+You have the option to deploy the Docker image of this application to your own **DockerHub** using **GitHub Actions**. This allows you to *automate the build and deployment process* whenever changes are made to the repository.
+
+## Prerequisites
+
+Before deploying the Docker image, ensure you have the following:
+
+- A DockerHub account
+- A GitHub repository with this project
+- DockerHub username and password (or access token) for authentication
+- A DockerHub repository
+
+## Step-by-Step Guide
+
+Follow these steps to set up automated deployment to DockerHub:
+
+1. **Create DockerHub Credentials**:
+
+   - Log in to your DockerHub account.
+   - Generate an access token or remember your DockerHub username and password. You'll need these to securely authenticate with DockerHub.
+
+2. **Configure GitHub Secrets**:
+
+   - Go to your GitHub repository and click on "Settings" -> "Secrets".
+   - Create two secrets:
+     - `DOCKER_USERNAME`: Set this to your DockerHub username.
+     - `DOCKER_PASSWORD`: Set this to your DockerHub password or access token.
+
+
 # Usage
 
 1. Upload a candidate's resume in PDF format.
