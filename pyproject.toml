@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "ChatPDF LangChain HR App"
+version = "0.1.0"
+description = "A powerful language model-driven HR tool for candidate resume evaluation."
+authors = ["Pedro-A-D-S <pedroalves0409@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+packages = [{include = "src"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+langchain = "0.0.154"
+PyPDF2 = "3.0.1"
+python-dotenv = "1.0.0"
+streamlit = "1.18.1"
+faiss-cpu = "1.7.4"
+streamlit-extras = "^0.3.5"
+altair = "4.0.0"
+openai = "0.28.1"
+tiktoken = "^0.5.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
