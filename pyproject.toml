@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "ChatPDF LangChain HR App"
+name = "chatpdf_langchain_hr_app"
 version = "0.1.0"
 description = "A powerful language model-driven HR tool for candidate resume evaluation."
 authors = ["Pedro-A-D-S <pedroalves0409@gmail.com>"]
