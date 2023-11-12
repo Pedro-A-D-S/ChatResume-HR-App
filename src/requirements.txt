@@ -8,7 +8,6 @@ blinker==1.7.0
 cachetools==5.3.2
 certifi==2023.7.22
 charset-normalizer==3.3.2
--e git+https://github.com/Pedro-A-D-S/ChatResume-HR-App.git@42d8de769510b715bac0f757146c20236b30306e#egg=chatpdf
 click==8.1.7
 contourpy==1.2.0
 cycler==0.12.1
