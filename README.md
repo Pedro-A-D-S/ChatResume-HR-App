@@ -1,89 +1,75 @@
-# ChatPDF LangChain HR App
+# Enterprise Multi-Agent HR Platform (LLMOps & ASVS)
 
-![Streamlit](https://img.shields.io/badge/Built%20with-Streamlit-informational?style=for-the-badge&logo=streamlit)
-![LangChain](https://img.shields.io/badge/Powered%20by-LangChain-blue?style=for-the-badge)
-![OpenAI](https://img.shields.io/badge/Uses-OpenAI%20API-ff7f00?style=for-the-badge)
+[![CI & Security](https://img.shields.io/badge/CI%2FCD-OIDC%20Secured-brightgreen)](.github/workflows/Deployment.yaml)
+[![OWASP ASVS](https://img.shields.io/badge/OWASP-ASVS%20v4.0%20%7C%20LLM%20Top%2010-blue)](docs/security/OWASP_GOVERNANCE.md)
+[![Memory Architecture](https://img.shields.io/badge/Agent%20Memory-5--Layer%20CoALA%20%26%20Mem0-9cf)](docs/security/OWASP_GOVERNANCE.md)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-## Overview
+An enterprise-grade, banking-compliant (**Itaú Unibanco & NTT DATA** standard) Multi-Agent HR candidate evaluation platform built under **Clean Architecture & Domain-Driven Design (DDD)**.
 
-The ChatPDF LangChain HR App is a language model-powered chatbot designed for Human Resources professionals. It allows you to upload a candidate's resume in PDF format and ask questions about the candidate's qualifications. The app leverages LangChain for text processing and the OpenAI API for question answering.
+The system replaces legacy monolithic scripts and unsafe `pickle` vector stores with a hardened multi-agent workflow featuring **5-Layer Cognitive Memory**, **LLM-as-a-Judge automated audit gates**, and **OWASP LLM01 / LLM06 / ASVS** sanitizers.
 
-## Getting Started
+---
 
-Follow these steps to set up and use the app:
+## 🏛️ Architecture Overview
 
-1. Clone the project repository to your local machine:
-
-   ```bash
-   git clone https://github.com/yourusername/chatpdf-langchain-hr-app.git
-   cd chatpdf-langchain-hr-app
-
-1. Install the required dependencies using [Poetry](https://python-poetry.org/):
-``` bash
-poetry install
 ```
-2. Create a virtual environment and activate it:
+[Candidate PDF / Resume]
+           │
+           ▼
+┌───────────────────────────────────────┐
+│ 1. Parser & PII Redactor Agent        │  <-- Strips CPFs, emails, phones (LGPD/GDPR)
+│    + Prompt Injection Guard           │  <-- Defends against indirect white-text jailbreaks
+└──────────────────┬────────────────────┘
+                   │ Anonymized & Sanitized Text
+                   ▼
+┌───────────────────────────────────────┐
+│ 2. Technical Evaluator Agent          │  <-- Matches competencies against Job Rubrics
+└──────────────────┬────────────────────┘
+                   │ Draft Verdict & Matched Competencies
+                   ▼
+┌───────────────────────────────────────┐
+│ 3. LLM-as-a-Judge Audit Agent         │  <-- Verifies hallucination, evidence grounding & bias
+└──────────────────┬────────────────────┘
+                   │ Verified Output
+                   ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│ 4. 5-Layer Cognitive Memory Architecture (CoALA / Mem0 pattern)       │
+│    • Layer 1 (Working): 85% budget token overflow management           │
+│    • Layer 2 (Episodic): Immutable JSONL audit trail                   │
+│    • Layer 3 (Semantic): SQLite Knowledge Graph + Schema Validation     │
+│    • Layer 4 (Procedural): Versioned YAML Screening Skills             │
+│    • Layer 5 (Forgetting Engine): Automated LGPD 30-day TTL cleanup    │
+└────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 🔒 Security & Compliance Guardrails
+
+- **Zero Arbitrary Deserialization**: Completely removed unsafe Python `pickle.load()` vectors; all durable storage uses structured SQLite and immutable JSONL.
+- **OWASP LLM01 (Prompt Injection)**: Pre-ingestion sanitizer intercepts adversarial inputs (e.g. invisible instructions demanding 100% fit scores) and rejects execution with an audit flag.
+- **OWASP LLM02 / LLM06 (PII & Excessive Agency)**: Redacts tax IDs (CPF/SSN), contact coordinates, and demographic markers before inference. No candidate rejection/approval is presented without dual-agent consensus.
+- **Docker Hardening**: Multi-stage, non-root execution container (`USER appuser`) with pinned base images.
+
+---
+
+## 🚀 Quickstart & Verification
+
+Run the test suite and CLI platform locally without external cloud dependencies:
+
 ```bash
-poetry shell
+# Set up environment
+export PYTHONPATH=src
+
+# Run automated unit and security tests
+python -m pytest tests/ -v
+
+# Run the CLI multi-agent platform simulation
+python -m hr_agent_platform.presentation.cli_app
 ```
-3. Create a file named `.env` in the project directory to store your OpenAI API key. Add your OpenAI API key to this file:
-```bash
-OPENAI_API_KEY=your_api_key_here
-```
-4. Run the app:
-```bash
-streamlit run src/app.py
-```
-5. Access the app in your web browser by following the URL displayed in your terminal.
 
-# Deploying Docker Image to DockerHub
+---
 
-You have the option to deploy the Docker image of this application to your own **DockerHub** using **GitHub Actions**. This allows you to *automate the build and deployment process* whenever changes are made to the repository.
-
-## Prerequisites
-
-Before deploying the Docker image, ensure you have the following:
-
-- A DockerHub account
-- A GitHub repository with this project
-- DockerHub username and password (or access token) for authentication
-- A DockerHub repository
-
-## Step-by-Step Guide
-
-Follow these steps to set up automated deployment to DockerHub:
-
-1. **Create DockerHub Credentials**:
-
-   - Log in to your DockerHub account.
-   - Generate an access token or remember your DockerHub username and password. You'll need these to securely authenticate with DockerHub.
-
-2. **Configure GitHub Secrets**:
-
-   - Go to your GitHub repository and click on "Settings" -> "Secrets".
-   - Create two secrets:
-     - `DOCKER_USERNAME`: Set this to your DockerHub username.
-     - `DOCKER_PASSWORD`: Set this to your DockerHub password or access token.
-
-
-# Usage
-
-1. Upload a candidate's resume in PDF format.
-2. In the text input field, ask questions about the candidate's qualifications in English.
-3. The app will process the resume, answer your questions, and display the HR evaluation.
-
-# Why This Project?
-
-- **Efficient Candidate Evaluation**: HR professionals can quickly evaluate candidates' qualifications by asking specific questions about their resumes, saving time in the hiring process.
-
-- **Language Model-Powered**: The app leverages OpenAI's language model and `LangChain` for advanced text processing, making it highly accurate in understanding and answering questions.
-- **User-Friendly**: The interface is designed to be user-friendly, allowing HR professionals to upload resumes and ask questions with ease.
-- **Customization**: You can further customize the app's appearance and functionality according to your HR team's needs.
-
-Give it a try and make your candidate evaluation process more efficient and data-driven!
-
-# License
-
-This project is licensed under the [MIT](https://opensource.org/license/mit/) License
-
-Made with ❤️ by [Pedro Alves](https://www.linkedin.com/in/pedro-a-d-s/)
+## 📄 License
+Distributed under the MIT License. See `LICENSE` for details.

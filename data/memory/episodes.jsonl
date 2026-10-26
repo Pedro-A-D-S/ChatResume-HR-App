@@ -1,0 +1,1 @@
+{"task_id": "EVAL-cand-prod-01", "candidate_id": "cand-prod-01", "role_evaluated": "Senior MLOps & LLMOps Engineer", "fit_score": 100.0, "judge_verdict": "VERIFIED_COMPLIANT: High rubric faithfulness, PII sanitized, zero hallucination.", "tokens_used": 450, "timestamp": "2026-10-26T11:10:10.016108+00:00"}
