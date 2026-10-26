@@ -1,13 +1,21 @@
 """Multi-Agent HR Workflow: Parser -> Evaluator -> LLM-as-a-Judge."""
 
 from __future__ import annotations
-import json
-from typing import Dict, Any, Optional
+
+from typing import Any
+
 from hr_agent_platform.domain.models import (
-    CandidateResume, EvaluationRubric, CandidateEvaluation, JudgeVerdict
+    CandidateEvaluation,
+    CandidateResume,
+    EvaluationRubric,
+    JudgeVerdict,
+)
+from hr_agent_platform.infrastructure.memory.agent_memory import (
+    EpisodeRecord,
+    FiveLayerAgentMemory,
 )
 from hr_agent_platform.infrastructure.security import SecurityGuardrails
-from hr_agent_platform.infrastructure.memory.agent_memory import FiveLayerAgentMemory, EpisodeRecord
+
 
 class MultiAgentHROrchestrator:
     """Enterprise multi-agent pipeline with deterministic test mode and mock LLM support."""
@@ -15,7 +23,9 @@ class MultiAgentHROrchestrator:
     def __init__(self, memory: FiveLayerAgentMemory):
         self.memory = memory
 
-    def parse_and_sanitize(self, candidate_id: str, raw_pdf_text: str) -> CandidateResume:
+    def parse_and_sanitize(
+        self, candidate_id: str, raw_pdf_text: str
+    ) -> CandidateResume:
         sanitized, pii, has_injection, flags = SecurityGuardrails.sanitize(raw_pdf_text)
         return CandidateResume(
             candidate_id=candidate_id,
@@ -23,18 +33,18 @@ class MultiAgentHROrchestrator:
             sanitized_text=sanitized,
             detected_pii=pii,
             has_injection_risk=has_injection,
-            security_flags=flags
+            security_flags=flags,
         )
 
     def evaluate_candidate(
         self,
         resume: CandidateResume,
         rubric: EvaluationRubric,
-        mock_llm_response: Optional[Dict[str, Any]] = None
+        mock_llm_response: dict[str, Any] | None = None,
     ) -> CandidateEvaluation:
         # Pre-task memory check
-        recent_episodes = self.memory.retrieve_recent_episodes(limit=2)
-        past_facts = self.memory.query_facts(rubric.role_title)
+        self.memory.retrieve_recent_episodes(limit=2)
+        self.memory.query_facts(rubric.role_title)
 
         if resume.has_injection_risk:
             # Short-circuit on prompt injection
@@ -52,8 +62,8 @@ class MultiAgentHROrchestrator:
                     hallucination_details=None,
                     bias_score=1.0,
                     confidence=1.0,
-                    verdict_summary="Rejected due to hostile prompt injection attempts."
-                )
+                    verdict_summary="Rejected due to hostile prompt injection attempts.",
+                ),
             )
 
         # Keyword / Skill match analysis
@@ -65,7 +75,9 @@ class MultiAgentHROrchestrator:
         fit_score = round(ratio * 100.0, 1)
 
         # LLM-as-a-Judge Audit Step
-        judge_verdict = self.audit_with_judge(resume, rubric, matched, missing, fit_score)
+        judge_verdict = self.audit_with_judge(
+            resume, rubric, matched, missing, fit_score
+        )
 
         evaluation = CandidateEvaluation(
             candidate_id=resume.candidate_id,
@@ -75,25 +87,27 @@ class MultiAgentHROrchestrator:
             years_experience_detected=5.0,
             fit_score=fit_score,
             synthesis=f"Senior screening analysis for {rubric.role_title}. Matches: {', '.join(matched)}. Missing: {', '.join(missing)}.",
-            judge_verdict=judge_verdict
+            judge_verdict=judge_verdict,
         )
 
         # Persist to Episodic & Semantic Memory
-        self.memory.record_episode(EpisodeRecord(
-            task_id=f"EVAL-{resume.candidate_id}",
-            candidate_id=resume.candidate_id,
-            role_evaluated=rubric.role_title,
-            fit_score=fit_score,
-            judge_verdict=judge_verdict.verdict_summary,
-            tokens_used=450
-        ))
+        self.memory.record_episode(
+            EpisodeRecord(
+                task_id=f"EVAL-{resume.candidate_id}",
+                candidate_id=resume.candidate_id,
+                role_evaluated=rubric.role_title,
+                fit_score=fit_score,
+                judge_verdict=judge_verdict.verdict_summary,
+                tokens_used=450,
+            )
+        )
 
         self.memory.store_fact(
             entity=resume.candidate_id,
             entity_type="candidate",
             relation="screened_for",
             value=rubric.role_title,
-            source=f"EVAL-{resume.candidate_id}"
+            source=f"EVAL-{resume.candidate_id}",
         )
 
         return evaluation
@@ -104,7 +118,7 @@ class MultiAgentHROrchestrator:
         rubric: EvaluationRubric,
         matched: list[str],
         missing: list[str],
-        score: float
+        score: float,
     ) -> JudgeVerdict:
         """LLM-as-a-Judge validates evidence integrity, hallucination, and demographic neutrality."""
         # Verification that matched skills actually exist in sanitized text
@@ -114,8 +128,10 @@ class MultiAgentHROrchestrator:
         return JudgeVerdict(
             is_faithful_to_resume=not hallucination_found,
             hallucination_detected=hallucination_found,
-            hallucination_details="Grounded: All matched competencies confirmed in resume tokens." if not hallucination_found else "Unverified claim found.",
+            hallucination_details="Grounded: All matched competencies confirmed in resume tokens."
+            if not hallucination_found
+            else "Unverified claim found.",
             bias_score=0.0,  # Zero demographic bias detected due to upstream PII stripping
             confidence=0.98,
-            verdict_summary="VERIFIED_COMPLIANT: High rubric faithfulness, PII sanitized, zero hallucination."
+            verdict_summary="VERIFIED_COMPLIANT: High rubric faithfulness, PII sanitized, zero hallucination.",
         )

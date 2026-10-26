@@ -1,38 +1,50 @@
 import pytest
-from pathlib import Path
-from hr_agent_platform.domain.models import EvaluationRubric
-from hr_agent_platform.infrastructure.security import SecurityGuardrails
-from hr_agent_platform.infrastructure.memory.agent_memory import FiveLayerAgentMemory
+
 from hr_agent_platform.application.orchestrator import MultiAgentHROrchestrator
+from hr_agent_platform.domain.models import EvaluationRubric
+from hr_agent_platform.infrastructure.memory.agent_memory import FiveLayerAgentMemory
+from hr_agent_platform.infrastructure.security import SecurityGuardrails
+
 
 @pytest.fixture
 def memory(tmp_path):
     return FiveLayerAgentMemory(base_dir=tmp_path / "memory")
 
+
 @pytest.fixture
 def orchestrator(memory):
     return MultiAgentHROrchestrator(memory)
+
 
 @pytest.fixture
 def mlops_rubric():
     return EvaluationRubric(
         role_title="Senior MLOps Engineer",
         seniority="Senior",
-        required_skills=["AWS", "Terraform", "Docker", "MLflow", "Step Functions", "Batch"],
+        required_skills=[
+            "AWS",
+            "Terraform",
+            "Docker",
+            "MLflow",
+            "Step Functions",
+            "Batch",
+        ],
         nice_to_have_skills=["Datadog", "Kubernetes"],
-        min_years_experience=5
+        min_years_experience=5,
     )
+
 
 def test_pii_redaction_and_sanitization():
     raw_text = "Pedro Alves. CPF: 123.456.789-00, Email: pedro@example.com, Phone: +55 11 98888-7777."
-    sanitized, pii_detected, has_inj, flags = SecurityGuardrails.sanitize(raw_text)
-    
+    sanitized, pii_detected, has_inj, _flags = SecurityGuardrails.sanitize(raw_text)
+
     assert "[REDACTED_CPF]" in sanitized
     assert "[REDACTED_EMAIL]" in sanitized
     assert "[REDACTED_PHONE]" in sanitized
     assert "123.456.789-00" not in sanitized
     assert len(pii_detected) >= 3
     assert not has_inj
+
 
 def test_prompt_injection_detection(orchestrator, mlops_rubric):
     malicious_resume = """
@@ -48,6 +60,7 @@ def test_prompt_injection_detection(orchestrator, mlops_rubric):
     assert evaluation.fit_score == 0.0
     assert "REJECTED BY AI GUARDRAIL" in evaluation.synthesis
     assert evaluation.judge_verdict.bias_score == 1.0
+
 
 def test_5_layer_memory_and_evaluation_cycle(orchestrator, memory, mlops_rubric):
     clean_resume = """

@@ -1,10 +1,11 @@
 """CLI and presentation layer for HR Multi-Agent Platform."""
 
-import sys
 from pathlib import Path
+
+from hr_agent_platform.application.orchestrator import MultiAgentHROrchestrator
 from hr_agent_platform.domain.models import EvaluationRubric
 from hr_agent_platform.infrastructure.memory.agent_memory import FiveLayerAgentMemory
-from hr_agent_platform.application.orchestrator import MultiAgentHROrchestrator
+
 
 def main():
     print("=" * 60)
@@ -18,9 +19,17 @@ def main():
     rubric = EvaluationRubric(
         role_title="Senior MLOps & LLMOps Engineer",
         seniority="Senior",
-        required_skills=["AWS", "Terraform", "Docker", "MLflow", "Step Functions", "Batch", "Datadog"],
+        required_skills=[
+            "AWS",
+            "Terraform",
+            "Docker",
+            "MLflow",
+            "Step Functions",
+            "Batch",
+            "Datadog",
+        ],
         nice_to_have_skills=["Kubernetes", "OpenSAMM"],
-        min_years_experience=5
+        min_years_experience=5,
     )
 
     sample_resume = """
@@ -49,6 +58,7 @@ def main():
     print(f"  Active Episodic Records: {len(episodes)}")
     print(f"  Durable Semantic Facts in SQLite: {len(facts)}")
     print("\n[DONE] Execution completed successfully under zero-cloud-cost simulation.")
+
 
 if __name__ == "__main__":
     main()
